@@ -3,18 +3,41 @@
 import datetime
 from io import BytesIO
 import json
-from flask import Blueprint, render_template, request, url_for, jsonify
+from flask import Blueprint, request, jsonify, abort
 from flask import current_app as app
+import functools
+import logging
+import xapian
 from .index.search_lib import search, index_document
 from .index.model import Document
-import xapian
 
 search_bp = Blueprint('search_bp',
                       __name__,
                       template_folder='templates',
                       static_folder='static')
 
+def auth_required(f):
+    """A simple decorator to check for a valid x-access-token header."""
+    @functools.wraps(f)
+    def decorated_function(*args, **kwargs):
+        logging.critical('remote addr is {}'.format(request.remote_addr))
+        if app.config['TESTING']:
+            app.logger.info('no auth required for testing')
+            return f(*args, **kwargs)
+        if 'x-access-token' in request.headers:
+            token = request.headers['x-access-token']
+            if token in app.config['AUTH_TOKENS']:
+                return f(*args, **kwargs)
+            else:
+                app.logger.critical('invalid auth token')
+                return abort(403)
+        else:
+            app.logger.critical('no auth token')
+            return abort(403)
+    return decorated_function
+
 @search_bp.route('/search', methods=['GET'])
+@auth_required
 def get_results():
     args = request.args.to_dict()
     if 'q' not in args:
@@ -30,8 +53,8 @@ def get_results():
     response.headers.add('Access-Control-Allow-Origin', '*');
     return response
 
-# This has no access control on it, but we assume that we're only listening on localhost.
 @search_bp.route('/index', methods=['POST'])
+@auth_required
 def index_documents():
     args = request.get_json(force=True)
     if not args:
