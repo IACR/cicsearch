@@ -37,8 +37,8 @@ def auth_required(f):
     return decorated_function
 
 @search_bp.route('/search', methods=['GET'])
-@auth_required
 def get_results():
+    """Search requests are not authenticated."""
     args = request.args.to_dict()
     if 'q' not in args:
         response = jsonify({'error': 'missing queries'})
