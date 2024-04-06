@@ -1,0 +1,22 @@
+{
+  "comment": "You can test indexing with this. Use the command curl -X POST -H 'Content-Type: application/json' -d @test.json http://localhost:5001/index",
+  "papers": [
+    {
+      "docid": "testing",
+      "published": "2024-04-04",
+      "title": "Testing with Testing Randomness",
+      "authors": [
+        "Fester F. Bestertester",
+        "Ralph Bunch",
+      ],
+      "url": "https://www.theonion.com/the-biggest-crypto-heists-of-all-time-1848591079",
+      "keywords": [
+        "proximity testing",
+        "succinct arguments",
+        "error-correcting codes"
+      ],
+      "abstract": "<p>This is the abstract.</p>",
+      "body": ""
+    }
+  ]
+}
