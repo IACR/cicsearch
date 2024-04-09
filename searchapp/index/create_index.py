@@ -28,7 +28,7 @@ def convert_cic(data: dict) -> Document:
     # if 'body' is in the document, we assume 
     title = data['title']
     if 'subtitle' in data and data['subtitle']:
-        title += ' ' + data['subtitle']
+        title += ' - ' + data['subtitle']
     doc = Document(docid = data['paperid'],
                    published = data['published'][:10],
                    title = title,
