@@ -99,7 +99,7 @@ def index_document(paper: Document,
     doc.set_data(json.dumps(data, indent=2))
     writable_db.replace_document(docid, doc)
 
-def search(db_path, offset=0, limit=1000, q=None, source=None):
+def search(db_path, offset=0, limit=100, q=None, source=None):
     """Execute a query on the index.
 
     Args:
@@ -159,7 +159,7 @@ def search(db_path, offset=0, limit=1000, q=None, source=None):
         res['sort_order'] = 'sorted by relevance'
         matches = []
         # Retrieve the matched set of documents.
-        mset = enquire.get_mset(offset, limit, 1000)
+        mset = enquire.get_mset(offset, limit, 100)
         for match in mset:
             item = {'docid': match.docid,
                     'rank': match.rank,
