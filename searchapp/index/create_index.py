@@ -9,6 +9,7 @@ import fnmatch
 import json
 import os
 from pathlib import Path
+from pypdf import PdfReader
 import sys
 from typing import List
 
@@ -29,8 +30,13 @@ def convert_cic(data: dict) -> Document:
     title = data['title']
     if 'subtitle' in data and data['subtitle']:
         title += ' ' + data['subtitle']
+    print(data)
+    if 'published' in data:
+        published = data['published'][:10]
+    else:
+        published = datetime.datetime.now().strftime('%Y-%m-%d')
     doc = Document(docid = data['paperid'],
-                   published = data['published'][:10],
+                   published = published,
                    title = title,
                    authors = [a['name'] for a in data['authors']],
                    url = data['URL'],
@@ -48,6 +54,9 @@ if __name__ == '__main__':
     arguments.add_argument('--dbpath',
                            default='xapian.db',
                            help='Path to writable database directory.')
+    arguments.add_argument('--include_pdf',
+                           action='store_true',
+                           help = 'Whether to include pdf text as body. This is really slow.')
     args = arguments.parse_args()
     if os.path.isfile(args.dbpath) or os.path.isdir(args.dbpath):
         print('CANNOT OVERWRITE dbpath')
@@ -76,6 +85,17 @@ if __name__ == '__main__':
             doc = convert_cic(data)
             if args.verbose:
                 print('indexing {}'.format(doc.docid))
+            if args.include_pdf:
+                body = ''
+                pdf_file = json_file.parents[0] / Path('main.pdf')
+                if pdf_file.is_file():
+                    reader = PdfReader(str(pdf_file))
+                    for page in reader.pages:
+                        body += '\n' + page.extract_text()
+                    doc.body = body
+                else:
+                    print('missing pdf file ' + str(pdf_file))
+                    sys.exit(2)
             index_document(doc, db, termgenerator)
             count += 1
             if count % 5000 == 0:

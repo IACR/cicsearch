@@ -8,7 +8,6 @@ import argparse
 from datetime import datetime, timezone
 from enum import Enum
 import json
-import math
 import sys
 import xapian
 #from flask import current_app as app
@@ -20,6 +19,7 @@ except:
 
 TITLE_WEIGHT = 5
 AUTHOR_WEIGHT = 3
+KEYWORD_WEIGHT = 3
 
 class SearchPrefix(Enum):
     TITLE = 'S'
@@ -75,14 +75,14 @@ def index_document(paper: Document,
     if paper.keywords:
         for keyword in paper.keywords:
             termgenerator.increase_termpos()
-            termgenerator.index_text(keyword)
+            termgenerator.index_text(keyword, KEYWORD_WEIGHT)
 
     termgenerator.increase_termpos()
     year = paper.published[0:4]
     termgenerator.index_text(year)
     termgenerator.index_text(year, 1, SearchPrefix.YEAR.value)
     
-    data = paper.model_dump(exclude_unset=True,exclude_none=True)
+    data = paper.model_dump(exclude_unset=True,exclude_none=True, exclude={'body'})
     # This is a heuristic designed to favor recent papers. I've
     # experimented with different techniques but this one is simple.
     # If you change it, a good rule of thumb is to keep the values

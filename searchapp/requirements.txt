@@ -1,0 +1,9 @@
+# Some things can be installed in a virtual environment. Others like
+# xapian are more complicated, so I typically install them in debian
+# and then set up a venv that packages other things. Under debian
+# you need python3-xapian and libxapian30.
+pydantic >= 2.0
+flask
+# only required if you index PDFs with create_index.py.
+pypdf
+

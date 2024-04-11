@@ -3,11 +3,13 @@
 import datetime
 from io import BytesIO
 import json
-from flask import Blueprint, request, jsonify, abort
-from flask import current_app as app
 import functools
 import logging
+
+from flask import Blueprint, request, jsonify, abort
+from flask import current_app as app
 import xapian
+
 from .index.search_lib import search, index_document
 from .index.model import Document
 
@@ -36,18 +38,23 @@ def auth_required(f):
             return abort(403)
     return decorated_function
 
+def _get_dbpath(args):
+    """Construct the database path from the arguments."""
+    if 'd' in args: # database name
+        dbname = args.get('c')
+        if dbname in app.config['XAPIAN_PATHS']:
+            return app.config['XAPIAN_PATHS'][dbname]
+    return app.config['XAPIAN_PATHS']['default']
+    
+
 @search_bp.route('/search', methods=['GET'])
 def get_results():
     """Search requests are not authenticated."""
     args = request.args.to_dict()
     if 'q' not in args:
         response = jsonify({'error': 'missing queries'})
-    else:
-        if 'd' in args: # for a test instance.
-            db_path = app.config['TEST_XAPIAN_DB_PATH']
-        else:
-            db_path = app.config['XAPIAN_DB_PATH']
-        response = jsonify(search(db_path,
+    db_path = _get_dbpath(args)
+    response = jsonify(search(db_path,
                                   offset=args.get('offset', 0),
                                   q=args.get('q')))
     response.headers.add('Access-Control-Allow-Origin', '*');
@@ -65,10 +72,7 @@ def index_documents():
         db = None
         try:
             papers = args['papers']
-            if 'd' in args: # for a test instance.
-                db_path = app.config['TEST_XAPIAN_DB_PATH']
-            else:
-                db_path = app.config['XAPIAN_DB_PATH']
+            db_path = _get_dbpath(args)
             db = xapian.WritableDatabase(db_path, xapian.DB_OPEN)
             termgenerator = xapian.TermGenerator()
             termgenerator.set_database(db)
