@@ -40,7 +40,7 @@ def auth_required(f):
 
 def _get_dbpath(args):
     """Construct the database path from the arguments."""
-    if 'd' in args: # database name
+    if 'c' in args: # database name
         dbname = args.get('c')
         if dbname in app.config['XAPIAN_PATHS']:
             return app.config['XAPIAN_PATHS'][dbname]
